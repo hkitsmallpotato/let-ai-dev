@@ -26,4 +26,8 @@ StarChat are also able to do design work aside from coding, and is rather fast. 
 
 Another limitation that is not the AI's fault but again an infrastrutural limit is that the short context length limit means that while we can use them to quickly generate a scaffold for a software project from nothing, trying to *modify* existing software still seems to be out of the question mostly. For this MPT's use of AliBi is an encouraging sign, however the quadratic performance bottleneck is still there and the slowdown may become untolerable once the conversation goes on for a while.
 
+## Other things
 
+We also tried to test these AI on a variety of misc. tasks, some of them are:
+
+- General webdev problem (eg authentication, multi-tenancy, file upload, HTML5 collaborative editing)
