@@ -28,6 +28,21 @@ Another limitation that is not the AI's fault but again an infrastrutural limit 
 
 ## Other things
 
+**Other tests performed**:
+
 We also tried to test these AI on a variety of misc. tasks, some of them are:
 
 - General webdev problem (eg authentication, multi-tenancy, file upload, HTML5 collaborative editing)
+- Meta level "capability amplification" test (or really, just prompt engineering?)
+
+**Static compilation of agent workflow**:
+
+One way to use these powerful AI is to agentize them and put them into a loop to analyze goal, come up with an action plan, then execute it (AutoGPT/Autonomous Agent etc). It is observed that they often get derailed/spin in a loop without making forward progress.
+
+One possible perspective to look at the set of prompt we designed is that it is a human crafted, "statically compiled" action plan to replace having the AI trying to give the next step dynamically/on-the-spot by analysing the situation.
+
+**Future improvement**:
+
+The set of prompts I designed right now is still pretty rough. I also found out the order of task seems "wrong" to the AI's eye and so it ignored some of the task, especially those around various diagram to analyse use case.
+
+As I am in a rush, I just skipped some of those tasks, perhaps resulting in incomplete requirement doc to downstream which may affect their quality.
