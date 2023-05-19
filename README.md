@@ -16,6 +16,13 @@ Prompts are sometimes surrounded with special instruction asking it to read but 
 
 In some of the tasks, additional background information or user preference is also attached.
 
+## Files
+
+- root directory: `{ai-name}-{topic}-{phase}.md` Data of asking AI to do first 2 phase in SDLC (requirement analysis and system architecture)
+- `/uncategorized` Misc. and advanced tests
+- `code/others` Coding tasks that are not part of a full SDLC/full project
+- `code/frontend` and `code/backend` - Try to extend to the test to actual implementation
+
 ## Preliminary Results
 
 They are generally able to give a rough draft of the requested documents, although the attention to details may be disappointing. It is also found that although injecting user preference/background info do tilt the AI to a desired direction, it also sometimes interfere negatively with the AI's pre-existing knowledge resulting in output where the AI seems to have fundamental misunderstanding about basic concepts.
