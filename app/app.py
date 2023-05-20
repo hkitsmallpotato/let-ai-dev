@@ -10,10 +10,21 @@ def run_llm(prompt):
     return output['choices'][0]['text'][prefix_l:]
 
 # TODO: Also just copied from quickstart doc
-with gr.Blocks() as software_dev_app:
-    initial_prompt = gr.Textbox(label="Initial Prompt")
-    output = gr.Textbox(label="AI reply")
-    ask_btn = gr.Button("Ask AI!")
-    ask_btn.click(fn=run_llm, inputs=initial_prompt, outputs=output, api_name="ask")
+copyediting = { "intro": """# Auto Software Dev Demo 
+This is a Proof-of-concept for using LLM to automate the SDLC. 
 
+*Important Caveat: No quality gaurantee, it may fail completely.*
+"""}
+
+with gr.Blocks() as software_dev_app:
+    gr.Markdown(copyediting["intro"])
+    with gr.Tab("System Design"):
+        with gr.Column(scale=1):
+            initial_prompt = gr.Textbox(label="Initial Prompt")
+        with gr.Column(scale=1):
+            output = gr.Textbox(label="AI reply")
+            ask_btn = gr.Button("Ask AI!")
+            ask_btn.click(fn=run_llm, inputs=initial_prompt, outputs=output, api_name="ask")
+    with gr.Tab("App scaffolding"):
+        gr.Markdown("Under construction!")
 software_dev_app.launch()
