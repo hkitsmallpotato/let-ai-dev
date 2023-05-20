@@ -1,2 +1,3 @@
 llama-cpp-python
 gradio
+huggingface_hub
