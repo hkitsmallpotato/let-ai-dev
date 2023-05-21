@@ -101,9 +101,17 @@ with gr.Blocks() as software_dev_app:
                 max_token = gr.Slider(20, 1000, value=300, label="Max Token")
                 ask_btn = gr.Button("Ask AI now!")
             with gr.Column(scale=1):
-                output1 = gr.Textbox(label="Initial analysis")
-                output2 = gr.Textbox(label="Project name and summary")
-                output3 = gr.Textbox(label="Requirement Analysis")
+                with gr.Accordion(label="Requirement Analysis", open=True):
+                    output1 = gr.Textbox(label="Initial analysis")
+                    output2 = gr.Textbox(label="Project name and summary")
+                    output3 = gr.Textbox(label="Requirement Analysis")
+                with gr.Accordion(label="System Architecture", open=False):
+                    output4 = gr.Textbox(label="")
+                with gr.Accordion(label="Frontend Design", open=False):
+                    output5 = gr.Textbox(label="")
+                    output6 = gr.Textbox(label="")
+                with gr.Accordion(label="Backend Design", open=False):
+                    output7 = gr.Textbox(label="")
         with gr.Row():
             gr.Markdown("Test")
             download_assets = gr.Files(label="Download Documents", value=[])
