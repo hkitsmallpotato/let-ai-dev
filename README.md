@@ -2,13 +2,31 @@
 
 This repo hosts some raw and cleaned up data for an experiment to use open source LLM to do end-to-end Software Development.
 
-## AI used
+It also hosts Proof-of-Concept AI-enabled app prototype.
+
+## AI-enabled apps
+
+We prototype them using gradio.
+
+### Auto Software Development
+
+Located in `/app/auto_software_dev`. Enter phrase saying what webapp you want to build (eg "a food ordering and delivery platform" as our manual test have done) and have the AI produce a set of design documents auto-magically.
+
+AI used: Wizard-Mega, 13B, 4 bit quantized (q4_0/lowest quality version to save on resources).
+
+Performance expectation:
+- Speed: about 1 token/sec on CPU, 5 token/sec on GPU
+- Quality: (my personal opinion only, it may count as completely failed if you are more strict) Okayish for the "fuzzy" part of software dev. Apparently scaffolding REST API, DB Design, frontend UI design etc are all relatively easy to AI.
+
+## Manual AI testing
+
+### AI used
 
 - Vicuna-13b v1.1 (general purpose, was SOTA in the open source space until recently)
 - MPT-7b-Chat (features ability to have longer/soft context length limit due to using AliBi instead of positional embedding)
 - StarChat (intruct fine-tuned from StarCoderBase, specialized on coding)
 
-## Method
+### Method
 
 Simple role-playing prompt is used to prim the AI. A partially standardized Input/Output mechanism is provided, where documents from previous stage of Software Development is provided with a brief description of what it is, and it is asked to perform a list of tasks outputing some documents.
 
@@ -16,14 +34,14 @@ Prompts are sometimes surrounded with special instruction asking it to read but 
 
 In some of the tasks, additional background information or user preference is also attached.
 
-## Files
+### Files
 
 - root directory: `{ai-name}-{topic}-{phase}.md` Data of asking AI to do first 2 phase in SDLC (requirement analysis and system architecture)
 - `/uncategorized` Misc. and advanced tests
 - `code/others` Coding tasks that are not part of a full SDLC/full project
 - `code/frontend` and `code/backend` - Try to extend to the test to actual implementation
 
-## Preliminary Results
+### Preliminary Results
 
 They are generally able to give a rough draft of the requested documents, although the attention to details may be disappointing. It is also found that although injecting user preference/background info do tilt the AI to a desired direction, it also sometimes interfere negatively with the AI's pre-existing knowledge resulting in output where the AI seems to have fundamental misunderstanding about basic concepts.
 
@@ -33,7 +51,7 @@ StarChat are also able to do design work aside from coding, and is rather fast. 
 
 Another limitation that is not the AI's fault but again an infrastrutural limit is that the short context length limit means that while we can use them to quickly generate a scaffold for a software project from nothing, trying to *modify* existing software still seems to be out of the question mostly. For this MPT's use of AliBi is an encouraging sign, however the quadratic performance bottleneck is still there and the slowdown may become untolerable once the conversation goes on for a while.
 
-## Other things
+### Other things
 
 **Other tests performed**:
 
