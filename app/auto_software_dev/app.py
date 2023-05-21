@@ -14,12 +14,12 @@ our_model_path = hf_hub_download(repo_id="TheBloke/wizard-mega-13B-GGML", filena
 llm = Llama(model_path=our_model_path, n_ctx=1500) #, n_gpu_layers=40
 
 # TODO: Whatever works atm
-def run_llm(prompt):
-    output = llm(prompt, max_tokens=12, stop=["Q:", "[end of text]"], echo=True)
+def run_llm(prompt, max_token):
+    output = llm(prompt, max_tokens=max_token, stop=["Q:", "[end of text]"], echo=True)
     prefix_l = len(prompt)
     return output['choices'][0]['text'][prefix_l:]
-def run_llm_stream(prompt):
-    outputs = llm(prompt, max_tokens=12, \
+def run_llm_stream(prompt, max_token):
+    outputs = llm(prompt, max_tokens=max_token, \
                  stop=["Q:", "[end of text]", "</s>"], \
                  echo=True, stream=True)
     text = ""
@@ -45,25 +45,35 @@ def update_asset(download_assets, ses_state, text):
     return (file_generated[:ses_state + 1], ses_state + 1)
 
 # ... and have a static flow graph etc
-def run_initial(user_statement):
+def run_initial(user_statement, is_streaming, max_token):
     p = system_prompts["init"].format(product=user_statement)
-    #ans = run_llm(p)
-    #return ans
-    stream = run_llm_stream(p)
-    for current_output in stream:
-        yield current_output
+    if is_streaming:
+        stream = run_llm_stream(p, max_token)
+        for current_output in stream:
+            yield current_output
+    else:
+        result = run_llm(p, max_token)
+        yield result
 
-def run_req(summary):
+def run_req(summary, is_streaming, max_token):
     p = system_prompts["req"].format(sum=summary)
-    stream = run_llm_stream(p)
-    for current_output in stream:
-        yield current_output
+    if is_streaming:
+        stream = run_llm_stream(p, max_token)
+        for current_output in stream:
+            yield current_output
+    else:
+        result = run_llm(p, max_token)
+        yield result
 
-def run_name(summary):
+def run_name(summary, is_streaming, max_token):
     p = system_prompts["name"].format(sum=summary)
-    stream = run_llm_stream(p)
-    for current_output in stream:
-        yield current_output
+    if is_streaming:
+        stream = run_llm_stream(p, max_token)
+        for current_output in stream:
+            yield current_output
+    else:
+        result = run_llm(p, max_token)
+        yield result
 
 
 
@@ -86,7 +96,9 @@ with gr.Blocks() as software_dev_app:
         ses_state = gr.State(0)
         with gr.Row():
             with gr.Column(scale=1):
-                initial_prompt = gr.Textbox(label="Initial Prompt")
+                initial_prompt = gr.Textbox(label="Initial Prompt", info="What do you want to build?")
+                is_streaming = gr.Checkbox(label="Streaming output?", value=True)
+                max_token = gr.Slider(20, 1000, value=300, label="Max Token")
                 ask_btn = gr.Button("Ask AI now!")
             with gr.Column(scale=1):
                 output1 = gr.Textbox(label="Initial analysis")
@@ -95,11 +107,11 @@ with gr.Blocks() as software_dev_app:
         with gr.Row():
             gr.Markdown("Test")
             download_assets = gr.Files(label="Download Documents", value=[])
-        ask_btn.click(fn=run_initial, inputs=initial_prompt, outputs=output1) \
+        ask_btn.click(fn=run_initial, inputs=[initial_prompt, is_streaming, max_token], outputs=output1) \
           .success(fn=update_asset, inputs=[download_assets, ses_state, output1], outputs=[download_assets, ses_state]) \
-          .success(fn=run_name, inputs=output1, outputs=output2) \
+          .success(fn=run_name, inputs=[output1, is_streaming, max_token], outputs=output2) \
           .success(fn=update_asset, inputs=[download_assets, ses_state, output2], outputs=[download_assets, ses_state]) \
-          .success(fn=run_req, inputs=output1, outputs=output3) \
+          .success(fn=run_req, inputs=[output1, is_streaming, max_token], outputs=output3) \
           .success(fn=update_asset, inputs=[download_assets, ses_state, output3], outputs=[download_assets, ses_state]) \
           .success(fn=gen_zipfile, inputs=download_assets, outputs=download_assets)
     with gr.Tab("App scaffolding"):
