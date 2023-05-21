@@ -29,29 +29,26 @@ for prompt_key, filename in promptset:
 
 file_generated = ["user_out_init.md", "user_out_name.md", "user_out_req.md"]
 
-def update_asset(download_assets, ses_state):
+def update_asset(download_assets, ses_state, text):
+    cur_file_name = file_generated[ses_state]
+    with open(cur_file_name, "w") as f:
+        f.write(text)
     return (file_generated[:ses_state + 1], ses_state + 1)
 
 # ... and have a static flow graph etc
 def run_initial(user_statement):
     p = system_prompts["init"].format(product=user_statement)
     ans = run_llm(p)
-    with open("user_out_init.md") as f:
-        f.write(ans)
     return ans
 
 def run_req(summary):
     p = system_prompts["req"].format(sum=summary)
     ans = run_llm(p)
-    with open("user_out_req.md") as f:
-        f.write(ans)
     return ans
 
 def run_name(summary):
     p = system_prompts["name"].format(sum=summary)
     ans = run_llm(p)
-    with open("user_out_name.md") as f:
-        f.write(ans)
     return ans
 
 
@@ -85,11 +82,11 @@ with gr.Blocks() as software_dev_app:
             gr.Markdown("Test")
             download_assets = gr.Files(label="Download Documents", value=[])
         ask_btn.click(fn=run_initial, inputs=initial_prompt, outputs=output1) \
-          .success(fn=update_asset, inputs=[download_assets, ses_state], outputs=[download_assets, ses_state]) \
+          .success(fn=update_asset, inputs=[download_assets, ses_state, output1], outputs=[download_assets, ses_state]) \
           .success(fn=run_name, inputs=output1, outputs=output2) \
-          .success(fn=update_asset, inputs=[download_assets, ses_state], outputs=[download_assets, ses_state]) \
+          .success(fn=update_asset, inputs=[download_assets, ses_state, output2], outputs=[download_assets, ses_state]) \
           .success(fn=run_req, inputs=output1, outputs=output3) \
-          .success(fn=update_asset, inputs=[download_assets, ses_state], outputs=[download_assets, ses_state]) \
+          .success(fn=update_asset, inputs=[download_assets, ses_state, output3], outputs=[download_assets, ses_state]) \
           .success(fn=gen_zipfile, inputs=download_assets, outputs=download_assets)
     with gr.Tab("App scaffolding"):
         gr.Markdown("Under construction!")
