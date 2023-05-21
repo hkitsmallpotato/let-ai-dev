@@ -26,27 +26,33 @@ for prompt_key, filename in promptset:
     with open(filename, "r") as f:
         system_prompts[prompt_key] = f.read()
 
+
+file_generated = ["user_out_init.md", "user_out_name.md", "user_out_req.md"]
+
+def update_asset(download_assets, ses_state):
+    return (file_generated[:ses_state + 1], ses_state + 1)
+
 # ... and have a static flow graph etc
 def run_initial(user_statement):
     p = system_prompts["init"].format(product=user_statement)
     ans = run_llm(p)
     with open("user_out_init.md") as f:
         f.write(ans)
-    return (ans, ["user_out_init.md"])
+    return ans
 
 def run_req(summary):
     p = system_prompts["req"].format(sum=summary)
     ans = run_llm(p)
     with open("user_out_req.md") as f:
         f.write(ans)
-    return (ans, ["user_out_init.md", "user_out_name.md", "user_out_req.md"])
+    return ans
 
 def run_name(summary):
     p = system_prompts["name"].format(sum=summary)
     ans = run_llm(p)
     with open("user_out_name.md") as f:
         f.write(ans)
-    return (ans, ["user_out_init.md", "user_out_name.md"])
+    return ans
 
 
 
@@ -66,10 +72,11 @@ This is a Proof-of-concept for using LLM to automate the SDLC.
 with gr.Blocks() as software_dev_app:
     gr.Markdown(copyediting["intro"])
     with gr.Tab("System Design"):
+        ses_state = gr.State(0)
         with gr.Row():
             with gr.Column(scale=1):
                 initial_prompt = gr.Textbox(label="Initial Prompt")
-                ask_btn = gr.Button("Ask AI new!")
+                ask_btn = gr.Button("Ask AI now!")
             with gr.Column(scale=1):
                 output1 = gr.Textbox(label="Initial analysis")
                 output2 = gr.Textbox(label="Project name and summary")
@@ -77,9 +84,12 @@ with gr.Blocks() as software_dev_app:
         with gr.Row():
             gr.Markdown("Test")
             download_assets = gr.Files(label="Download Documents", value=[])
-        ask_btn.click(fn=run_initial, inputs=initial_prompt, outputs=[output1, download_assets]) \
-          .success(fn=run_name, inputs=output1, outputs=[output2, download_assets]) \
-          .success(fn=run_req, inputs=output1, outputs=[output3, download_assets]) \
+        ask_btn.click(fn=run_initial, inputs=initial_prompt, outputs=output1) \
+          .success(fn=update_asset, inputs=[download_assets, ses_state], outputs=[download_assets, ses_state]) \
+          .success(fn=run_name, inputs=output1, outputs=output2) \
+          .success(fn=update_asset, inputs=[download_assets, ses_state], outputs=[download_assets, ses_state]) \
+          .success(fn=run_req, inputs=output1, outputs=output3) \
+          .success(fn=update_asset, inputs=[download_assets, ses_state], outputs=[download_assets, ses_state]) \
           .success(fn=gen_zipfile, inputs=download_assets, outputs=download_assets)
     with gr.Tab("App scaffolding"):
         gr.Markdown("Under construction!")
