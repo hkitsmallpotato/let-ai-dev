@@ -3,6 +3,8 @@ import gradio as gr
 
 from huggingface_hub import hf_hub_download
 
+import zipfile
+
 # Cutting edge model doesn't work due to recent compatibility breakage and too fast to catch up downstream
 # Expect things to break a lots
 # TODO: Add reference to gh issue
@@ -47,6 +49,13 @@ def run_name(summary):
     return (ans, ["user_out_init.md", "user_out_name.md"])
 
 
+
+def gen_zipfile(dummy):
+    with zipfile.ZipFile("user_out_all.zip", mode="w") as archive:
+        for filename in ["user_out_init.md", "user_out_name.md", "user_out_req.md"]:
+            archive.write(filename)
+    return ["user_out_init.md", "user_out_name.md", "user_out_req.md", "user_out_all.zip"]
+
 # TODO: Also just copied from quickstart doc
 copyediting = { "intro": """# Auto Software Dev Demo 
 This is a Proof-of-concept for using LLM to automate the SDLC. 
@@ -68,9 +77,10 @@ with gr.Blocks() as software_dev_app:
         with gr.Row():
             gr.Markdown("Test")
             download_assets = gr.Files(label="Download Documents", value=[])
-        ask_btn.click(fn=run_initial2, inputs=initial_prompt, outputs=[output1, download_assets]) \
-          .success(fn=run_name2, inputs=output1, outputs=[output2, download_assets]) \
-          .success(fn=run_req2, inputs=output1, outputs=[output3, download_assets])
+        ask_btn.click(fn=run_initial, inputs=initial_prompt, outputs=[output1, download_assets]) \
+          .success(fn=run_name, inputs=output1, outputs=[output2, download_assets]) \
+          .success(fn=run_req, inputs=output1, outputs=[output3, download_assets]) \
+          .success(fn=gen_zipfile, inputs=download_assets, outputs=download_assets)
     with gr.Tab("App scaffolding"):
         gr.Markdown("Under construction!")
 
