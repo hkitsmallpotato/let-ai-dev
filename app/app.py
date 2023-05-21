@@ -18,6 +18,15 @@ def run_llm(prompt):
     output = llm(prompt, max_tokens=12, stop=["Q:", "[end of text]"], echo=True)
     prefix_l = len(prompt)
     return output['choices'][0]['text'][prefix_l:]
+def run_llm_stream(prompt):
+    outputs = llm(prompt, max_tokens=12, \
+                 stop=["Q:", "[end of text]", "</s>"], \
+                 echo=True, stream=True)
+    text = ""
+    for output in outputs:
+        tok = output['choices'][0]['text']
+        text = text + tok
+        yield text
 
 # Temporary hack to load prompts
 system_prompts = {}
@@ -38,18 +47,23 @@ def update_asset(download_assets, ses_state, text):
 # ... and have a static flow graph etc
 def run_initial(user_statement):
     p = system_prompts["init"].format(product=user_statement)
-    ans = run_llm(p)
-    return ans
+    #ans = run_llm(p)
+    #return ans
+    stream = run_llm_stream(p)
+    for current_output in stream:
+        yield current_output
 
 def run_req(summary):
     p = system_prompts["req"].format(sum=summary)
-    ans = run_llm(p)
-    return ans
+    stream = run_llm_stream(p)
+    for current_output in stream:
+        yield current_output
 
 def run_name(summary):
     p = system_prompts["name"].format(sum=summary)
-    ans = run_llm(p)
-    return ans
+    stream = run_llm_stream(p)
+    for current_output in stream:
+        yield current_output
 
 
 
