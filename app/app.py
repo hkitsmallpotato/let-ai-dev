@@ -27,15 +27,24 @@ for prompt_key, filename in promptset:
 # ... and have a static flow graph etc
 def run_initial(user_statement):
     p = system_prompts["init"].format(product=user_statement)
-    return run_llm(p)
+    ans = run_llm(p)
+    with open("user_out_init.md") as f:
+        f.write(ans)
+    return (ans, ["user_out_init.md"])
 
 def run_req(summary):
     p = system_prompts["req"].format(sum=summary)
-    return run_llm(p)
+    ans = run_llm(p)
+    with open("user_out_req.md") as f:
+        f.write(ans)
+    return (ans, ["user_out_init.md", "user_out_name.md", "user_out_req.md"])
 
 def run_name(summary):
     p = system_prompts["name"].format(sum=summary)
-    return run_llm(p)
+    ans = run_llm(p)
+    with open("user_out_name.md") as f:
+        f.write(ans)
+    return (ans, ["user_out_init.md", "user_out_name.md"])
 
 
 # TODO: Also just copied from quickstart doc
@@ -48,16 +57,20 @@ This is a Proof-of-concept for using LLM to automate the SDLC.
 with gr.Blocks() as software_dev_app:
     gr.Markdown(copyediting["intro"])
     with gr.Tab("System Design"):
-        with gr.Column(scale=1):
-            initial_prompt = gr.Textbox(label="Initial Prompt")
-        with gr.Column(scale=1):
-            output1 = gr.Textbox(label="AI reply 1")
-            output2 = gr.Textbox(label="AI reply 2")
-            output3 = gr.Textbox(label="AI reply 3")
-            ask_btn = gr.Button("Ask AI!")
-            ask_btn.click(fn=run_initial, inputs=initial_prompt, outputs=output1) \
-              .success(fn=run_name, inputs=output1, outputs=output2) \
-              .success(fn=run_req, inputs=output1, outputs=output3)
+        with gr.Row():
+            with gr.Column(scale=1):
+                initial_prompt = gr.Textbox(label="Initial Prompt")
+                ask_btn = gr.Button("Ask AI new!")
+            with gr.Column(scale=1):
+                output1 = gr.Textbox(label="Initial analysis")
+                output2 = gr.Textbox(label="Project name and summary")
+                output3 = gr.Textbox(label="Requirement Analysis")
+        with gr.Row():
+            gr.Markdown("Test")
+            download_assets = gr.Files(label="Download Documents", value=[])
+        ask_btn.click(fn=run_initial2, inputs=initial_prompt, outputs=[output1, download_assets]) \
+          .success(fn=run_name2, inputs=output1, outputs=[output2, download_assets]) \
+          .success(fn=run_req2, inputs=output1, outputs=[output3, download_assets])
     with gr.Tab("App scaffolding"):
         gr.Markdown("Under construction!")
 
