@@ -12,10 +12,31 @@ our_model_path = hf_hub_download(repo_id="TheBloke/wizard-mega-13B-GGML", filena
 llm = Llama(model_path=our_model_path, n_ctx=1500) #, n_gpu_layers=40
 
 # TODO: Whatever works atm
-def run_llm(prompt, count):
-    output = llm(prompt.format(count=count), max_tokens=12, stop=["Q:", "[end of text]"], echo=True)
+def run_llm(prompt):
+    output = llm(prompt, max_tokens=12, stop=["Q:", "[end of text]"], echo=True)
     prefix_l = len(prompt)
     return output['choices'][0]['text'][prefix_l:]
+
+# Temporary hack to load prompts
+system_prompts = {}
+promptset = [("init", "prompt_initial.md"), ("req", "prompt_requirement.md"), ("name", "prompt_name.md")]
+for prompt_key, filename in promptset:
+    with open(filename, "r") as f:
+        system_prompts[prompt_key] = f.read()
+
+# ... and have a static flow graph etc
+def run_initial(user_statement):
+    p = system_prompts["init"].format(product=user_statement)
+    return run_llm(p)
+
+def run_req(summary):
+    p = system_prompts["req"].format(sum=summary)
+    return run_llm(p)
+
+def run_name(summary):
+    p = system_prompts["name"].format(sum=summary)
+    return run_llm(p)
+
 
 # TODO: Also just copied from quickstart doc
 copyediting = { "intro": """# Auto Software Dev Demo 
@@ -33,14 +54,11 @@ with gr.Blocks() as software_dev_app:
             output1 = gr.Textbox(label="AI reply 1")
             output2 = gr.Textbox(label="AI reply 2")
             output3 = gr.Textbox(label="AI reply 3")
-            in1 = gr.Textbox(value="first", visible=False)
-            in2 = gr.Textbox(value="second", visible=False)
-            in3 = gr.Textbox(value="third", visible=False)
             ask_btn = gr.Button("Ask AI!")
-            ask_btn.click(fn=run_llm, inputs=[initial_prompt, in1], outputs=output1) \
-              .success(fn=run_llm, inputs=[initial_prompt, in2], outputs=output2) \
-              .success(fn=run_llm, inputs=[initial_prompt, in3], outputs=output3)
+            ask_btn.click(fn=run_initial, inputs=initial_prompt, outputs=output1) \
+              .success(fn=run_name, inputs=output1, outputs=output2) \
+              .success(fn=run_req, inputs=output1, outputs=output3)
     with gr.Tab("App scaffolding"):
         gr.Markdown("Under construction!")
 
-software_dev_app.launch()
+software_dev_app.queue().launch() # queue needed for respond time > 60 sec
