@@ -5,6 +5,15 @@ from huggingface_hub import hf_hub_download
 
 import zipfile
 
+from githubkit import GitHub, TokenAuthStrategy
+
+import base64
+import json #json.load(file path)
+
+# Utility
+def b64e(s):
+    return base64.b64encode(s.encode()).decode()
+
 # Cutting edge model doesn't work due to recent compatibility breakage and too fast to catch up downstream
 # Expect things to break a lots
 # TODO: Add reference to gh issue
@@ -82,6 +91,45 @@ def gen_zipfile(dummy):
         for filename in ["user_out_init.md", "user_out_name.md", "user_out_req.md"]:
             archive.write(filename)
     return ["user_out_init.md", "user_out_name.md", "user_out_req.md", "user_out_all.zip"]
+
+
+
+# Automatically make a commit to github, return commit url
+def make_commit_to_github(account, repo_name, files, commit_msg, gh_strat):
+    with GitHub(gh_strat) as github:
+        resp = github.rest.repos.get(owner=account, repo=repo_name)
+        repo = resp.parsed_data
+
+        resp2 = github.rest.repos.get_branch(owner=account, repo=repo_name, branch=repo.default_branch)
+        b2 = resp2.parsed_data
+        prev_sha = b2.commit.sha
+
+        graphql_query = """mutation ($input: CreateCommitOnBranchInput!) {
+            createCommitOnBranch(input: $input) { commit { url } } }"""
+
+        graphql_var = {
+            "input": {
+              "branch": {
+                "repositoryNameWithOwner": account + "/" + repo_name,
+                "branchName": repo.default_branch
+              },
+              "message": {"headline": commit_msg },
+              "fileChanges": {
+                "additions": files
+              },
+              "expectedHeadOid": prev_sha
+        }
+        }
+        commit_result = github.graphql(graphql_query, graphql_var)
+
+        return commit_result["createCommitOnBranch"]["commit"]["url"]
+
+
+def convert_format_dirty(file_obj, base):
+    return { "path": base + "/" + file_obj["name"], "contents": b64e(file_obj["content"]) }
+
+#tester123 = [convert_format_dirty(x, "hello") for x in machine_generated_scaffold]
+#TokenAuthStrategy(GITHUB_PAT_SINGLE_REPO)
 
 # TODO: Also just copied from quickstart doc
 copyediting = { "intro": """# Auto Software Dev Demo 
