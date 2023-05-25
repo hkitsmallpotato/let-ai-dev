@@ -183,7 +183,11 @@ def gen_zipfile(dummy):
 copyediting = { "intro": """# Auto Software Dev Demo 
 This is a Proof-of-concept for using LLM to automate the SDLC. 
 
-*Important Caveat: No quality gaurantee, it may fail completely.*
+**Important Caveat:**
+- *No quality gaurantee, it may fail completely.*
+- *Haven't yet audited for privacy (eg console log), don't enter personal/sensitive info.*
+- *Ditto for security - for app scaffolding demo please use a PAT locked to an empty repo with no other access if you want to try.*
+- *Prompts are still being experimented on - app scaffolding is unreliable, and prompt injection attack is possible.*
 """}
 
 with gr.Blocks() as software_dev_app:
