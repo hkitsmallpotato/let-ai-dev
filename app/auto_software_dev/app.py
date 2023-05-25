@@ -10,6 +10,8 @@ from githubkit import GitHub, TokenAuthStrategy
 import base64
 import json #json.load(file path)
 
+import jsom
+
 # Utility
 def b64e(s):
     return base64.b64encode(s.encode()).decode()
@@ -39,7 +41,7 @@ def run_llm_stream(prompt, max_token):
 
 # Temporary hack to load prompts
 system_prompts = {}
-promptset = [("init", "prompt_initial.md"), ("req", "prompt_requirement.md"), ("name", "prompt_name.md")]
+promptset = [("init", "prompt_initial.md"), ("req", "prompt_requirement.md"), ("name", "prompt_name.md"), ("guide", "prompt_guide.md"), ("guide_refine", "prompt_guide_refine.md"), ("extract", "prompt_extract.md")]
 for prompt_key, filename in promptset:
     with open(filename, "r") as f:
         system_prompts[prompt_key] = f.read()
@@ -52,46 +54,6 @@ def update_asset(download_assets, ses_state, text):
     with open(cur_file_name, "w") as f:
         f.write(text)
     return (file_generated[:ses_state + 1], ses_state + 1)
-
-# ... and have a static flow graph etc
-def run_initial(user_statement, is_streaming, max_token):
-    p = system_prompts["init"].format(product=user_statement)
-    if is_streaming:
-        stream = run_llm_stream(p, max_token)
-        for current_output in stream:
-            yield current_output
-    else:
-        result = run_llm(p, max_token)
-        yield result
-
-def run_req(summary, is_streaming, max_token):
-    p = system_prompts["req"].format(sum=summary)
-    if is_streaming:
-        stream = run_llm_stream(p, max_token)
-        for current_output in stream:
-            yield current_output
-    else:
-        result = run_llm(p, max_token)
-        yield result
-
-def run_name(summary, is_streaming, max_token):
-    p = system_prompts["name"].format(sum=summary)
-    if is_streaming:
-        stream = run_llm_stream(p, max_token)
-        for current_output in stream:
-            yield current_output
-    else:
-        result = run_llm(p, max_token)
-        yield result
-
-
-
-def gen_zipfile(dummy):
-    with zipfile.ZipFile("user_out_all.zip", mode="w") as archive:
-        for filename in ["user_out_init.md", "user_out_name.md", "user_out_req.md"]:
-            archive.write(filename)
-    return ["user_out_init.md", "user_out_name.md", "user_out_req.md", "user_out_all.zip"]
-
 
 
 # Automatically make a commit to github, return commit url
@@ -130,6 +92,92 @@ def convert_format_dirty(file_obj, base):
 
 #tester123 = [convert_format_dirty(x, "hello") for x in machine_generated_scaffold]
 #TokenAuthStrategy(GITHUB_PAT_SINGLE_REPO)
+
+
+
+# ... and have a static flow graph etc
+def run_initial(user_statement, is_streaming, max_token):
+    p = system_prompts["init"].format(product=user_statement)
+    if is_streaming:
+        stream = run_llm_stream(p, max_token)
+        for current_output in stream:
+            yield current_output
+    else:
+        result = run_llm(p, max_token)
+        yield result
+
+def run_req(summary, is_streaming, max_token):
+    p = system_prompts["req"].format(sum=summary)
+    if is_streaming:
+        stream = run_llm_stream(p, max_token)
+        for current_output in stream:
+            yield current_output
+    else:
+        result = run_llm(p, max_token)
+        yield result
+
+def run_name(summary, is_streaming, max_token):
+    p = system_prompts["name"].format(sum=summary)
+    if is_streaming:
+        stream = run_llm_stream(p, max_token)
+        for current_output in stream:
+            yield current_output
+    else:
+        result = run_llm(p, max_token)
+        yield result
+
+
+# Prompt chain for the app scaffolding part
+def gen_guide(query):
+    p = system_prompts["guide"].format(q=query)
+    #if is_streaming:
+    stream = run_llm_stream(p, 700)
+    for current_output in stream:
+        yield current_output
+    #else:
+    #    result = run_llm(p, max_token)
+    #    yield result
+
+def gen_agent_commands(generated_guide):
+    #p = system_prompts["guide_refine"].format(guide=sample_output_guide)
+    p = system_prompts["guide_refine"].format(guide=generated_guide)
+    result = run_llm(p, 400)
+    print(result)
+    return result
+
+def gen_file_list(generated_guide, generated_script):
+    p = system_prompts["extract"].format(guide=generated_guide, script=generated_script)
+    result = run_llm(p, 800)
+    print(result)
+    return result
+
+def try_parse_jsom(commands_jsom):
+    return jsom.JsomParser(ignore_warnings=jsom.ALL_WARNINGS).loads(commands_jsom)
+
+def commit_to_github(myfiles, gh_org_acc, gh_repo, gh_base_path, gh_pat):
+    filelist = []
+    if isinstance(myfiles, list):
+        filelist = myfiles
+    elif isinstance(myfiles, dict):
+        if "files" in myfiles.keys():
+            filelist = myfiles["files"]
+        elif "file" in myfiles.keys():
+            filelist = myfiles["file"]
+        else:
+            raise ValueError("No file nor files attribute")
+    else:
+        raise ValueError("Not list nor dict")
+    gh_fileset = [convert_format_dirty(x, gh_base_path) for x in filelist]
+    return make_commit_to_github(gh_org_acc, gh_repo, gh_fileset, "[Test] Auto AI commit", TokenAuthStrategy(gh_pat))
+
+
+
+def gen_zipfile(dummy):
+    with zipfile.ZipFile("user_out_all.zip", mode="w") as archive:
+        for filename in ["user_out_init.md", "user_out_name.md", "user_out_req.md"]:
+            archive.write(filename)
+    return ["user_out_init.md", "user_out_name.md", "user_out_req.md", "user_out_all.zip"]
+
 
 # TODO: Also just copied from quickstart doc
 copyediting = { "intro": """# Auto Software Dev Demo 
@@ -172,5 +220,29 @@ with gr.Blocks() as software_dev_app:
           .success(fn=gen_zipfile, inputs=download_assets, outputs=download_assets)
     with gr.Tab("App scaffolding"):
         gr.Markdown("Under construction!")
+        with gr.Row():
+            with gr.Column(scale=1):
+                gh_org_acc = gr.Textbox(label="Org/account")
+                gh_repo = gr.Textbox(label="Repo")
+                gh_base_path = gr.Textbox(label="Base Path")
+                gh_pat = gr.Textbox(label="Personal Access Token")
+            with gr.Column(scale=2):
+                with gr.Box():
+                    with gr.Row():
+                        scaffold_query = gr.Textbox(label="Scaffolding Query")
+                        ask2_btn = gr.Button("Ask")
+                    with gr.Row():
+                        ans2 = gr.Textbox(label="Guide")
+                gen_btn = gr.Button("Generate app")
+                commit_url = gr.Textbox(label="Commit URL")
+                extracted_shell_script = gr.State("")
+                extracted_files = gr.State("")
+                extracted_files_parsed = gr.State()
+        ask2_btn.click(fn=gen_guide, inputs=scaffold_query, outputs=ans2)
+        gen_btn.click(fn=gen_agent_commands, inputs=ans2, outputs=extracted_shell_script) \
+          .success(fn=gen_file_list, inputs=[ans2, extracted_shell_script], outputs=extracted_files) \
+          .success(fn=try_parse_jsom, inputs=extracted_files, outputs=extracted_files_parsed) \
+          .success(fn=commit_to_github, inputs=[extracted_files_parsed, gh_org_acc, gh_repo, gh_base_path, gh_pat], outputs=commit_url)
+
 
 software_dev_app.queue().launch() # queue needed for respond time > 60 sec

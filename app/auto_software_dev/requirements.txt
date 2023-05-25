@@ -1,4 +1,5 @@
-llama-cpp-python
+llama-cpp-python==0.1.52
 gradio
 huggingface_hub
 githubkit
+jsom
