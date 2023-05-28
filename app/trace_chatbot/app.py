@@ -100,6 +100,23 @@ def ui_run_step(uistate_chatbot, ui_question, ui_guidiance):
 def ui_feed_response(uistate_chatbot):
     return [[ans] for ans in uistate_chatbot.raw_answers]
 
+def ui_detect_action(ui_bot_steps):
+    print(ui_bot_steps[-1])
+    res = detect_action(ui_bot_steps[-1][0])
+    if res["found"]:
+        print(res["whole"])
+        mapV = { "search_internet": "Search Internet", "visit_website": "Visit Website" }
+        return (mapV[res["action_type"]], res["action_arg"])
+    else:
+        return ("", "")
+
+def ui_do_action(uistate_chatbot, ui_action_type, ui_action_arg):
+    if ui_action_type == "Search Internet":
+        uistate_chatbot.add_search_result(ui_action_arg)
+        return (uistate_chatbot.web_search_history[-1]["data"], uistate_chatbot.web_search_history[-1]["md"])
+    else:
+        return ([], "")
+
 with gr.Blocks() as trace_chatbot:
     with gr.Tab("Help"):
         gr.Markdown("Under Construction")
@@ -124,12 +141,21 @@ with gr.Blocks() as trace_chatbot:
                            .success(fn=ui_feed_response, inputs=uistate_chatbot, outputs=ui_bot_steps)
                     ui_ai_output = gr.Textbox(label="AI Output")
                 with gr.Box():
-                    ui_action_type = gr.Dropdown(["Search Internet", "Visit Website"], label="Action type")
-                    ui_action_arg = gr.Textbox(label="Action Argument")
+                    ui_action_type = gr.Dropdown(["Search Internet", "Visit Website"], label="Action type", interactive=True)
+                    ui_action_arg = gr.Textbox(label="Action Argument", interactive=True)
                     btn_perform_action = gr.Button(value="Do action")
                     btn_detect_action.click(fn=ui_detect_action, inputs=ui_bot_steps, outputs=[ui_action_type, ui_action_arg])
     with gr.Tab("Web Search"):
         gr.Markdown("Under Construction")
+        with gr.Row():
+            with gr.Column():
+                ui_websearch_data = gr.Dataframe(headers=["URL", "Title", "Snippet"], \
+                                            datatype=["str", "str", "str"], \
+                                            col_count=(3, "fixed"), \
+                                            type="array")
+            with gr.Column():
+                ui_websearch_md = gr.Markdown()
+            btn_perform_action.click(fn=ui_do_action, inputs=[uistate_chatbot, ui_action_type, ui_action_arg], outputs=[ui_websearch_data, ui_websearch_md])
     with gr.Tab("System Prompt"):
         gr.Markdown("Under Construction")
 
