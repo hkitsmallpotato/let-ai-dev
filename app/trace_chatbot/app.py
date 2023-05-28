@@ -10,6 +10,7 @@ import gradio as gr
 c = Client("https://openaccess-ai-collective-manticore-13b-chat-pyg.hf.space/")
 text_maker = html2text.HTML2Text()
 text_maker.ignore_links = True
+text_maker.ignore_images = True
 
 
 def ask_llm(prompt, c):
@@ -41,7 +42,7 @@ def load_jinja_templates(base, templates):
         loaded_templates[name] = templateEnv.get_template(templ)
     return loaded_templates
 
-prompts = load_jinja_templates("./prompts",{"initial":"initial.md"})
+prompts = load_jinja_templates("./prompts",{"initial":"initial.md", "index_map":"index_map.md", "index_reduce":"index_reduce.md"})
 
 #prompts["initial"].render(question="Hello", steps = [], hint="")
 
@@ -53,6 +54,21 @@ def detect_action(string):
         return {"found": True, "whole":result[0], "action_type":result[1], "action_arg":result[2] }
     else:
         return {"found": False }
+
+def consolidate_doc_from_url(url, q):
+    doc = grab_webpage(url, text_maker)
+    print(doc)
+    chunks, chunk_size = len(doc), 3 * 1400
+    chunked_doc = [ doc[i:i+chunk_size] for i in range(0, chunks, chunk_size) ]
+    summaries = []
+    for chunk in chunked_doc:
+        print(chunk)
+        p = prompts["index_map"].render(question=q, snippet=chunk)
+        summaries.append(ask_llm(p, c))
+    p = prompts["index_reduce"].render(question=q, snippets=summaries)
+    print(p)
+    ans = ask_llm(p, c)
+    return ans
 
 # Main loop?
 
