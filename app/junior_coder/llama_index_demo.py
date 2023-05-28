@@ -9,17 +9,23 @@ from llama_index import (
     GPTVectorStoreIndex,
     SimpleDirectoryReader,
     LLMPredictor,
+    LangchainEmbedding,
     ServiceContext,
     StorageContext
 )
 
+#from langchain.embeddings.huggingface import HuggingFaceEmbeddings
+from langchain.embeddings import HuggingFaceEmbeddings, SentenceTransformerEmbeddings 
 
 chroma_client = chromadb.Client(Settings(
     chroma_db_impl="duckdb+parquet",
+    persist_directory="chroma_store"
     #persist_directory="/path/to/persist/directory" # Optional, defaults to .chromadb/ in the current directory
 ))
 
 chroma_collection = chroma_client.create_collection(name="llama_vec_store")
+
+embed_model = LangchainEmbedding(HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2"))
 
 # construct vector store
 vector_store = ChromaVectorStore(
@@ -28,7 +34,8 @@ vector_store = ChromaVectorStore(
 
 # construct vector store and customize storage context
 storage_context = StorageContext.from_defaults(
-    vector_store = vector_store
+    vector_store = vector_store,
+    embed_model = embed_model
 )
 
 # Load your documents
