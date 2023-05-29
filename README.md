@@ -18,6 +18,14 @@ Performance expectation:
 - Speed: about 1 token/sec on CPU, 5 token/sec on GPU
 - Quality: (my personal opinion only, it may count as completely failed if you are more strict) Okayish for the "fuzzy" part of software dev. Apparently scaffolding REST API, DB Design, frontend UI design etc are all relatively easy to AI.
 
+### Trace Chatbot
+
+Located in `/app/trace_chatbot`, it help user better understand how tool-augmented chatbot works by giving something like a step-tracing debugger. Still WIP.
+
+AI used: Manticore-13B quantized for now (using the hosted endpoint on one of the public HF space - don't abuse it!)
+
+(In manual testing it sometimes work, but often go off rail. Also seems quite sensitive to prompt template used with the "wrong" one working but "more correct" one failing...)
+
 ## Manual AI testing
 
 ### AI used
