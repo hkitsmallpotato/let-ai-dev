@@ -1,0 +1,108 @@
+<pre>(venv) (base) <font color="#4E9A06"><b>lemontea@lemontea-Katana-GF66-11UE</b></font>:<font color="#3465A4"><b>~/Work/ai/our_apps/gh/let-ai-dev/app/junior_coder</b></font>$ python3
+Python 3.8.13 (default, Mar 28 2022, 11:38:47) 
+[GCC 7.5.0] :: Anaconda, Inc. on linux
+Type &quot;help&quot;, &quot;copyright&quot;, &quot;credits&quot; or &quot;license&quot; for more information.
+&gt;&gt;&gt; from custom_llm import CustomLLM
+&gt;&gt;&gt; import chromadb
+&gt;&gt;&gt; from chromadb.config import Settings
+&gt;&gt;&gt; from llama_index.vector_stores import ChromaVectorStore
+&gt;&gt;&gt; 
+&gt;&gt;&gt; from llama_index import (
+...     GPTVectorStoreIndex,
+...     SimpleDirectoryReader,
+...     LLMPredictor,
+...     LangchainEmbedding,
+...     ServiceContext,
+...     StorageContext
+... )
+&gt;&gt;&gt; from langchain.embeddings import HuggingFaceEmbeddings, SentenceTransformerEmbeddings 
+&gt;&gt;&gt; chroma_client = chromadb.Client(Settings(
+...     chroma_db_impl=&quot;duckdb+parquet&quot;,
+...     persist_directory=&quot;chroma_store&quot;
+...     #persist_directory=&quot;/path/to/persist/directory&quot; # Optional, defaults to .chromadb/ in the current directory
+... ))
+&gt;&gt;&gt; embed_model = LangchainEmbedding(HuggingFaceEmbeddings(model_name=&quot;all-MiniLM-L6-v2&quot;))
+Downloading (…)e9125/.gitattributes: 100%|██████████████████████████████████████████████████████████████| 1.18k/1.18k [00:00&lt;00:00, 149kB/s]
+Downloading (…)_Pooling/config.json: 100%|█████████████████████████████████████████████████████████████████| 190/190 [00:00&lt;00:00, 25.8kB/s]
+Downloading (…)7e55de9125/README.md: 100%|█████████████████████████████████████████████████████████████| 10.6k/10.6k [00:00&lt;00:00, 8.49MB/s]
+Downloading (…)55de9125/config.json: 100%|██████████████████████████████████████████████████████████████████| 612/612 [00:00&lt;00:00, 477kB/s]
+Downloading (…)ce_transformers.json: 100%|█████████████████████████████████████████████████████████████████| 116/116 [00:00&lt;00:00, 89.9kB/s]
+Downloading (…)125/data_config.json: 100%|█████████████████████████████████████████████████████████████| 39.3k/39.3k [00:00&lt;00:00, 29.0MB/s]
+Downloading pytorch_model.bin: 100%|███████████████████████████████████████████████████████████████████| 90.9M/90.9M [00:44&lt;00:00, 2.06MB/s]
+Downloading (…)nce_bert_config.json: 100%|███████████████████████████████████████████████████████████████| 53.0/53.0 [00:00&lt;00:00, 5.87kB/s]
+Downloading (…)cial_tokens_map.json: 100%|██████████████████████████████████████████████████████████████████| 112/112 [00:00&lt;00:00, 242kB/s]
+Downloading (…)e9125/tokenizer.json: 100%|███████████████████████████████████████████████████████████████| 466k/466k [00:00&lt;00:00, 1.64MB/s]
+Downloading (…)okenizer_config.json: 100%|██████████████████████████████████████████████████████████████████| 350/350 [00:00&lt;00:00, 272kB/s]
+Downloading (…)9125/train_script.py: 100%|█████████████████████████████████████████████████████████████| 13.2k/13.2k [00:00&lt;00:00, 10.7MB/s]
+Downloading (…)7e55de9125/vocab.txt: 100%|███████████████████████████████████████████████████████████████| 232k/232k [00:00&lt;00:00, 2.04MB/s]
+Downloading (…)5de9125/modules.json: 100%|██████████████████████████████████████████████████████████████████| 349/349 [00:00&lt;00:00, 273kB/s]
+&gt;&gt;&gt; chroma_collection = chroma_client.create_collection(name=&quot;llama_vec_store&quot;)
+No embedding_function provided, using default embedding function: DefaultEmbeddingFunction https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2
+&gt;&gt;&gt; embed_model = LangchainEmbedding(HuggingFaceEmbeddings(model_name=&quot;all-MiniLM-L6-v2&quot;))
+&gt;&gt;&gt; vector_store = ChromaVectorStore(
+...     chroma_collection=chroma_collection,
+... )
+&gt;&gt;&gt; storage_context = StorageContext.from_defaults(
+...     vector_store = vector_store,
+...     embed_model = embed_model
+... )
+Traceback (most recent call last):
+  File &quot;&lt;stdin&gt;&quot;, line 1, in &lt;module&gt;
+TypeError: from_defaults() got an unexpected keyword argument &apos;embed_model&apos;
+&gt;&gt;&gt; storage_context = StorageContext.from_defaults(
+...     vector_store = vector_store,
+... )
+&gt;&gt;&gt; documents = SimpleDirectoryReader(&apos;data&apos;).load_data()
+&gt;&gt;&gt; llm_predictor = LLMPredictor(llm=CustomLLM())
+&gt;&gt;&gt; service_context = ServiceContext.from_defaults(llm_predictor=llm_predictor, embed_model=embed_model)
+&gt;&gt;&gt; index = GPTVectorStoreIndex.from_documents(documents, storage_context=storage_context, service_context=service_context)
+Token indices sequence length is longer than the specified maximum sequence length for this model (1042 &gt; 1024). Running this sequence through the model will result in indexing errors
+&gt;&gt;&gt; query_engine = index.as_query_engine()
+&gt;&gt;&gt; response = query_engine.query(&quot;How does langchain enable agent use case?&quot;)
+Loaded as API: https://openaccess-ai-collective-manticore-13b-chat-pyg.hf.space/ ✔
+StatusUpdate(code=&lt;Status.STARTING: &apos;STARTING&apos;&gt;, rank=None, queue_size=None, eta=None, success=None, time=datetime.datetime(2023, 5, 29, 23, 26, 3, 636972), progress_data=None)
+StatusUpdate(code=&lt;Status.IN_QUEUE: &apos;IN_QUEUE&apos;&gt;, rank=0, queue_size=1, eta=41.483885094926165, success=None, time=datetime.datetime(2023, 5, 29, 23, 26, 5, 55021), progress_data=None)
+StatusUpdate(code=&lt;Status.IN_QUEUE: &apos;IN_QUEUE&apos;&gt;, rank=0, queue_size=1, eta=41.483885094926165, success=None, time=datetime.datetime(2023, 5, 29, 23, 26, 5, 55021), progress_data=None)
+StatusUpdate(code=&lt;Status.IN_QUEUE: &apos;IN_QUEUE&apos;&gt;, rank=0, queue_size=1, eta=41.483885094926165, success=None, time=datetime.datetime(2023, 5, 29, 23, 26, 5, 55021), progress_data=None)
+StatusUpdate(code=&lt;Status.IN_QUEUE: &apos;IN_QUEUE&apos;&gt;, rank=0, queue_size=1, eta=41.483885094926165, success=None, time=datetime.datetime(2023, 5, 29, 23, 26, 5, 55021), progress_data=None)
+StatusUpdate(code=&lt;Status.IN_QUEUE: &apos;IN_QUEUE&apos;&gt;, rank=0, queue_size=1, eta=41.483885094926165, success=None, time=datetime.datetime(2023, 5, 29, 23, 26, 5, 55021), progress_data=None)
+StatusUpdate(code=&lt;Status.IN_QUEUE: &apos;IN_QUEUE&apos;&gt;, rank=0, queue_size=1, eta=41.483885094926165, success=None, time=datetime.datetime(2023, 5, 29, 23, 26, 5, 55021), progress_data=None)
+StatusUpdate(code=&lt;Status.IN_QUEUE: &apos;IN_QUEUE&apos;&gt;, rank=0, queue_size=1, eta=41.483885094926165, success=None, time=datetime.datetime(2023, 5, 29, 23, 26, 5, 55021), progress_data=None)
+StatusUpdate(code=&lt;Status.IN_QUEUE: &apos;IN_QUEUE&apos;&gt;, rank=0, queue_size=1, eta=41.483885094926165, success=None, time=datetime.datetime(2023, 5, 29, 23, 26, 5, 55021), progress_data=None)
+StatusUpdate(code=&lt;Status.IN_QUEUE: &apos;IN_QUEUE&apos;&gt;, rank=0, queue_size=1, eta=41.483885094926165, success=None, time=datetime.datetime(2023, 5, 29, 23, 26, 5, 55021), progress_data=None)
+StatusUpdate(code=&lt;Status.PROCESSING: &apos;PROCESSING&apos;&gt;, rank=None, queue_size=None, eta=None, success=None, time=datetime.datetime(2023, 5, 29, 23, 26, 50, 904182), progress_data=None)
+StatusUpdate(code=&lt;Status.PROCESSING: &apos;PROCESSING&apos;&gt;, rank=None, queue_size=None, eta=None, success=None, time=datetime.datetime(2023, 5, 29, 23, 26, 50, 904182), progress_data=None)
+StatusUpdate(code=&lt;Status.ITERATING: &apos;ITERATING&apos;&gt;, rank=None, queue_size=None, eta=None, success=True, time=datetime.datetime(2023, 5, 29, 23, 27, 3, 430806), progress_data=None)
+StatusUpdate(code=&lt;Status.ITERATING: &apos;ITERATING&apos;&gt;, rank=None, queue_size=None, eta=None, success=True, time=datetime.datetime(2023, 5, 29, 23, 27, 8, 633058), progress_data=None)
+StatusUpdate(code=&lt;Status.ITERATING: &apos;ITERATING&apos;&gt;, rank=None, queue_size=None, eta=None, success=True, time=datetime.datetime(2023, 5, 29, 23, 27, 13, 462554), progress_data=None)
+StatusUpdate(code=&lt;Status.ITERATING: &apos;ITERATING&apos;&gt;, rank=None, queue_size=None, eta=None, success=True, time=datetime.datetime(2023, 5, 29, 23, 27, 18, 481657), progress_data=None)
+StatusUpdate(code=&lt;Status.ITERATING: &apos;ITERATING&apos;&gt;, rank=None, queue_size=None, eta=None, success=True, time=datetime.datetime(2023, 5, 29, 23, 27, 23, 503044), progress_data=None)
+&gt;&gt;&gt; response
+Response(response=&apos;Based on the provided context information, it appears that LangChain is a framework for developing applications powered by language models that enables various uses cases such as autonomous agents, personal assistants, chatbots, and code understanding. It also provides best practices and built-in implementations for common use cases like answering questions over specific documents, querying tabular data, interacting with APIs, extracting structured information from text, summarization, and evaluation.&apos;, source_nodes=[NodeWithScore(node=Node(text=&apos;\n\nWelcome to LangChain\n\n**LangChain** is a framework for developing applications powered by language\nmodels. We believe that the most powerful and differentiated applications will\nnot only call out to a language model, but will also be:\n\n  1. _Data-aware_ : connect a language model to other sources of data\n\n  2. _Agentic_ : allow a language model to interact with its environment\n\nThe LangChain framework is designed around these principles.\n\nThis is the Python specific portion of the documentation. For a purely\nconceptual guide to LangChain, see here. For the JavaScript documentation, see\nhere.\n\n&apos;, doc_id=&apos;63286e1a-7f4a-4efd-b691-d30f441188f7&apos;, embedding=None, doc_hash=&apos;82435827d9573e20df24b05c370b5147dd0b55df927f23ba995c9c372ada2dea&apos;, extra_info={}, node_info={&apos;start&apos;: 0, &apos;end&apos;: 602}, relationships={&lt;DocumentRelationship.SOURCE: &apos;1&apos;&gt;: &apos;81fea2c0-4562-43f6-961f-918841362de0&apos;}), score=0.5609836852992071), NodeWithScore(node=Node(text=&apos;\n\nUse Cases\n\nBest practices and built-in implementations for common LangChain use cases:\n\n  * Autonomous Agents: Autonomous agents are long-running agents that take many steps in an attempt to accomplish an objective. Examples include AutoGPT and BabyAGI.\n\n  * Agent Simulations: Putting agents in a sandbox and observing how they interact with each other and react to events can be an effective way to evaluate their long-range reasoning and planning abilities.\n\n  * Personal Assistants: One of the primary LangChain use cases. Personal assistants need to take actions, remember interactions, and have knowledge about your data.\n\n  * Question Answering: Another common LangChain use case. Answering questions over specific documents, only utilizing the information in those documents to construct an answer.\n\n  * Chatbots: Language models love to chat, making this a very natural use of them.\n\n  * Querying Tabular Data: Recommended reading if you want to use language models to query structured data (CSVs, SQL, dataframes, etc).\n\n  * Code Understanding: Recommended reading if you want to use language models to analyze code.\n\n  * Interacting with APIs: Enabling language models to interact with APIs is extremely powerful. It gives them access to up-to-date information and allows them to take actions.\n\n  * Extraction: Extract structured information from text.\n\n  * Summarization: Compressing longer documents. A type of Data-Augmented Generation.\n\n  * Evaluation: Generative models are hard to evaluate with traditional metrics. One promising approach is to use language models themselves to do the evaluation.\n\n&apos;, doc_id=&apos;83063308-741e-4c98-bbd8-16c4051b87b1&apos;, embedding=None, doc_hash=&apos;3d69b0b314b847c60098606293ef59b1a9464a685041c8d4195691e9215c7145&apos;, extra_info={}, node_info={&apos;start&apos;: 0, &apos;end&apos;: 1618}, relationships={&lt;DocumentRelationship.SOURCE: &apos;1&apos;&gt;: &apos;4540abcb-6d8a-4681-afcc-938f02dcdac2&apos;}), score=0.5780891707069089)], extra_info={&apos;63286e1a-7f4a-4efd-b691-d30f441188f7&apos;: {}, &apos;83063308-741e-4c98-bbd8-16c4051b87b1&apos;: {}})
+&gt;&gt;&gt; 
+&gt;&gt;&gt; print(response)
+Based on the provided context information, it appears that LangChain is a framework for developing applications powered by language models that enables various uses cases such as autonomous agents, personal assistants, chatbots, and code understanding. It also provides best practices and built-in implementations for common use cases like answering questions over specific documents, querying tabular data, interacting with APIs, extracting structured information from text, summarization, and evaluation.
+&gt;&gt;&gt; response.extra_info
+{&apos;63286e1a-7f4a-4efd-b691-d30f441188f7&apos;: {}, &apos;83063308-741e-4c98-bbd8-16c4051b87b1&apos;: {}}
+&gt;&gt;&gt; response.source_nodes
+[NodeWithScore(node=Node(text=&apos;\n\nWelcome to LangChain\n\n**LangChain** is a framework for developing applications powered by language\nmodels. We believe that the most powerful and differentiated applications will\nnot only call out to a language model, but will also be:\n\n  1. _Data-aware_ : connect a language model to other sources of data\n\n  2. _Agentic_ : allow a language model to interact with its environment\n\nThe LangChain framework is designed around these principles.\n\nThis is the Python specific portion of the documentation. For a purely\nconceptual guide to LangChain, see here. For the JavaScript documentation, see\nhere.\n\n&apos;, doc_id=&apos;63286e1a-7f4a-4efd-b691-d30f441188f7&apos;, embedding=None, doc_hash=&apos;82435827d9573e20df24b05c370b5147dd0b55df927f23ba995c9c372ada2dea&apos;, extra_info={}, node_info={&apos;start&apos;: 0, &apos;end&apos;: 602}, relationships={&lt;DocumentRelationship.SOURCE: &apos;1&apos;&gt;: &apos;81fea2c0-4562-43f6-961f-918841362de0&apos;}), score=0.5609836852992071), NodeWithScore(node=Node(text=&apos;\n\nUse Cases\n\nBest practices and built-in implementations for common LangChain use cases:\n\n  * Autonomous Agents: Autonomous agents are long-running agents that take many steps in an attempt to accomplish an objective. Examples include AutoGPT and BabyAGI.\n\n  * Agent Simulations: Putting agents in a sandbox and observing how they interact with each other and react to events can be an effective way to evaluate their long-range reasoning and planning abilities.\n\n  * Personal Assistants: One of the primary LangChain use cases. Personal assistants need to take actions, remember interactions, and have knowledge about your data.\n\n  * Question Answering: Another common LangChain use case. Answering questions over specific documents, only utilizing the information in those documents to construct an answer.\n\n  * Chatbots: Language models love to chat, making this a very natural use of them.\n\n  * Querying Tabular Data: Recommended reading if you want to use language models to query structured data (CSVs, SQL, dataframes, etc).\n\n  * Code Understanding: Recommended reading if you want to use language models to analyze code.\n\n  * Interacting with APIs: Enabling language models to interact with APIs is extremely powerful. It gives them access to up-to-date information and allows them to take actions.\n\n  * Extraction: Extract structured information from text.\n\n  * Summarization: Compressing longer documents. A type of Data-Augmented Generation.\n\n  * Evaluation: Generative models are hard to evaluate with traditional metrics. One promising approach is to use language models themselves to do the evaluation.\n\n&apos;, doc_id=&apos;83063308-741e-4c98-bbd8-16c4051b87b1&apos;, embedding=None, doc_hash=&apos;3d69b0b314b847c60098606293ef59b1a9464a685041c8d4195691e9215c7145&apos;, extra_info={}, node_info={&apos;start&apos;: 0, &apos;end&apos;: 1618}, relationships={&lt;DocumentRelationship.SOURCE: &apos;1&apos;&gt;: &apos;4540abcb-6d8a-4681-afcc-938f02dcdac2&apos;}), score=0.5780891707069089)]
+&gt;&gt;&gt; response.source_nodes[0].sc
+Traceback (most recent call last):
+  File &quot;&lt;stdin&gt;&quot;, line 1, in &lt;module&gt;
+AttributeError: &apos;NodeWithScore&apos; object has no attribute &apos;sc&apos;
+&gt;&gt;&gt; response.source_nodes[0]
+NodeWithScore(node=Node(text=&apos;\n\nWelcome to LangChain\n\n**LangChain** is a framework for developing applications powered by language\nmodels. We believe that the most powerful and differentiated applications will\nnot only call out to a language model, but will also be:\n\n  1. _Data-aware_ : connect a language model to other sources of data\n\n  2. _Agentic_ : allow a language model to interact with its environment\n\nThe LangChain framework is designed around these principles.\n\nThis is the Python specific portion of the documentation. For a purely\nconceptual guide to LangChain, see here. For the JavaScript documentation, see\nhere.\n\n&apos;, doc_id=&apos;63286e1a-7f4a-4efd-b691-d30f441188f7&apos;, embedding=None, doc_hash=&apos;82435827d9573e20df24b05c370b5147dd0b55df927f23ba995c9c372ada2dea&apos;, extra_info={}, node_info={&apos;start&apos;: 0, &apos;end&apos;: 602}, relationships={&lt;DocumentRelationship.SOURCE: &apos;1&apos;&gt;: &apos;81fea2c0-4562-43f6-961f-918841362de0&apos;}), score=0.5609836852992071)
+&gt;&gt;&gt; response.source_nodes[0].node
+Node(text=&apos;\n\nWelcome to LangChain\n\n**LangChain** is a framework for developing applications powered by language\nmodels. We believe that the most powerful and differentiated applications will\nnot only call out to a language model, but will also be:\n\n  1. _Data-aware_ : connect a language model to other sources of data\n\n  2. _Agentic_ : allow a language model to interact with its environment\n\nThe LangChain framework is designed around these principles.\n\nThis is the Python specific portion of the documentation. For a purely\nconceptual guide to LangChain, see here. For the JavaScript documentation, see\nhere.\n\n&apos;, doc_id=&apos;63286e1a-7f4a-4efd-b691-d30f441188f7&apos;, embedding=None, doc_hash=&apos;82435827d9573e20df24b05c370b5147dd0b55df927f23ba995c9c372ada2dea&apos;, extra_info={}, node_info={&apos;start&apos;: 0, &apos;end&apos;: 602}, relationships={&lt;DocumentRelationship.SOURCE: &apos;1&apos;&gt;: &apos;81fea2c0-4562-43f6-961f-918841362de0&apos;})
+&gt;&gt;&gt; response.source_nodes[0].score
+0.5609836852992071
+&gt;&gt;&gt; response.source_nodes[0].doc_id
+/home/lemontea/Work/ai/our_apps/gh/let-ai-dev/app/junior_coder/venv/lib/python3.8/site-packages/llama_index/data_structs/node.py:171: UserWarning: .doc_id is deprecated, use .node.ref_doc_id instead
+  warnings.warn(&quot;.doc_id is deprecated, use .node.ref_doc_id instead&quot;)
+&apos;81fea2c0-4562-43f6-961f-918841362de0&apos;
+&gt;&gt;&gt; response.source_nodes[0].doc_hash
+Traceback (most recent call last):
+  File &quot;&lt;stdin&gt;&quot;, line 1, in &lt;module&gt;
+AttributeError: &apos;NodeWithScore&apos; object has no attribute &apos;doc_hash&apos;
+&gt;&gt;&gt; 
+</pre>

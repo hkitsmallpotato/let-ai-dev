@@ -24,6 +24,7 @@ chroma_client = chromadb.Client(Settings(
 ))
 
 chroma_collection = chroma_client.create_collection(name="llama_vec_store")
+#No embedding_function provided, using default embedding function: DefaultEmbeddingFunction https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2
 
 embed_model = LangchainEmbedding(HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2"))
 
@@ -35,7 +36,7 @@ vector_store = ChromaVectorStore(
 # construct vector store and customize storage context
 storage_context = StorageContext.from_defaults(
     vector_store = vector_store,
-    embed_model = embed_model
+    #embed_model = embed_model
 )
 
 # Load your documents
@@ -43,10 +44,14 @@ documents = SimpleDirectoryReader('data').load_data()
 
 # define LLM
 llm_predictor = LLMPredictor(llm=CustomLLM())
-service_context = ServiceContext.from_defaults(llm_predictor=llm_predictor)
+service_context = ServiceContext.from_defaults(
+    llm_predictor=llm_predictor,
+    embed_model = embed_model
+)
+
 
 # Create the index
-index = GPTVectorStoreIndex.from_documents(documents, storage_context=storage_context)
+index = GPTVectorStoreIndex.from_documents(documents, storage_context=storage_context, service_context=service_context)
 
 # Create the query engine
 query_engine = index.as_query_engine()
