@@ -7,6 +7,7 @@ from llama_index.vector_stores import ChromaVectorStore
 
 from llama_index import (
     GPTVectorStoreIndex,
+    download_loader,
     SimpleDirectoryReader,
     LLMPredictor,
     LangchainEmbedding,
@@ -54,7 +55,28 @@ def createCustomContexts(chroma_dir="chroma_store", chroma_collection_name="llam
 storage_context, service_context = createCustomContexts()
 
 # Load your documents
-documents = SimpleDirectoryReader('data').load_data()
+#documents = SimpleDirectoryReader('data').load_data()
+
+#
+# Loading from webpage (code from AI chatbot)
+# - WebCrawlerReader - load a whole website
+# - WebPageReader - load a single webpage
+#
+WebCrawlerReader = download_loader('WebCrawlerReader')
+
+# Replace <url> with the URL of the website you want to load
+loader = WebCrawlerReader()
+documents_website = loader.load_data(url="")
+
+#
+# Loading from github repo (code from AI chatbot)
+# 
+GithubRepoReader = download_loader('GithubRepoReader')
+
+# Replace <owner> and <repo> with the owner and name of the Github repository you want to load
+repo_url = f'https://github.com/<owner>/<repo>'
+loader = GithubRepoReader()
+documents_github = loader.load_data(repo_url=repo_url)
 
 # Create the index
 index = GPTVectorStoreIndex.from_documents(documents, storage_context=storage_context, service_context=service_context)
