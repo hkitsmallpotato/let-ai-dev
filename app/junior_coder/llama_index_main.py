@@ -34,11 +34,11 @@ def createCustomContexts(chroma_dir="chroma_store", chroma_collection_name="llam
         persist_directory=chroma_dir
     ))
     chroma_collection = chroma_client.create_collection(name=chroma_collection_name)
-
+    
     # Ask llama-index to use chroma instead of in-memory for vector store
     vector_store = ChromaVectorStore(chroma_collection=chroma_collection)
     storage_context = StorageContext.from_defaults(vector_store = vector_store)
-
+    
     # Ask llama-index to use our local/free solution for *both* LLM and embeddings
     llm_predictor = LLMPredictor(llm=CustomLLM())
     embed_model = LangchainEmbedding(HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2"))
@@ -46,7 +46,7 @@ def createCustomContexts(chroma_dir="chroma_store", chroma_collection_name="llam
         llm_predictor=llm_predictor,
         embed_model = embed_model
     )
-
+    
     return (storage_context, service_context)
 
 
@@ -62,21 +62,38 @@ storage_context, service_context = createCustomContexts()
 # - WebCrawlerReader - load a whole website
 # - WebPageReader - load a single webpage
 #
-WebCrawlerReader = download_loader('WebCrawlerReader')
+#WebCrawlerReader = download_loader('WebCrawlerReader')
 
 # Replace <url> with the URL of the website you want to load
-loader = WebCrawlerReader()
-documents_website = loader.load_data(url="")
+#loader = WebCrawlerReader()
+#documents_website = loader.load_data(url="")
 
 #
 # Loading from github repo (code from AI chatbot)
+# it hallucinated? non-existent
+# Correct one is at llamahub: https://llamahub.ai/l/github_repo
 # 
-GithubRepoReader = download_loader('GithubRepoReader')
+
+# Special function that dynamically download integrations from llamahub...
+download_loader('GithubRepositoryReader')
+
+# ... So you can load class now
+from llama_index.readers.llamahub_modules.github_repo import GithubRepositoryReader, GithubClient
 
 # Replace <owner> and <repo> with the owner and name of the Github repository you want to load
-repo_url = f'https://github.com/<owner>/<repo>'
-loader = GithubRepoReader()
-documents_github = loader.load_data(repo_url=repo_url)
+github_client = GithubClient(os.getenv("GITHUB_TOKEN"))
+
+loader = GithubRepositoryReader(
+    github_client,
+    owner =                  "strapi",
+    repo =                   "strapi",
+    #filter_directories =     (["gpt_index", "docs"], GithubRepositoryReader.FilterType.INCLUDE),
+    #filter_file_extensions = ([".py"], GithubRepositoryReader.FilterType.INCLUDE),
+    verbose =                True,
+    concurrent_requests =    5,
+)
+
+gh_docs = loader.load_data(branch="main")
 
 # Create the index
 index = GPTVectorStoreIndex.from_documents(documents, storage_context=storage_context, service_context=service_context)
