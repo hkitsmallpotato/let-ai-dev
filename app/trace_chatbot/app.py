@@ -133,9 +133,52 @@ def ui_do_action(uistate_chatbot, ui_action_type, ui_action_arg):
     else:
         return ([], "")
 
+# TODO: hardcoded help text
+help_text = """# Trace a chatbot
+
+*(This help text is co-written by the Manticore-13B AI)*
+
+Welcome to this demo app that helps you understand how a tooling-enhanced, LLM-powered AI chatbot works! The agent uses ReACT technique in prompt engineering and tool use integration in a loop to power a chatbot that can search and read internet to get up-to-date information to answer user queries.  You can refer to the GitHub repository at [hkitsmallpotato/let-ai-dev](https://github.com/hkitsmallpotato/let-ai-dev) for source code.
+
+## UI Organization
+
+There are five tabs: 
+- Help - this tab
+- System Trace - The main tab, divided into three areas:
+  - Panel to trigger one step of asking LLM
+  - Panel showing history of AI response and to edit/correct it
+  - Panel to trigger tool actions
+- Web Search - Shows result of the last internet search
+- Indexing - show internals of article summarization using LLM through chunking
+- System Prompt - let user experiment with different prompts to improve the AI's output quality/instruction-following ability.
+
+Note:
+- There are two possible tool action that can be triggered by the chatbot: Web Search and Indexing.
+- The reason indexing is needed is because of the context length limit, and most internet articles are longer than that. We solve this by chunking it into pieces, feed each small piece to LLM asking it to give a summary relevant to the user question, then run one more pass over the LLM with these summary to produce a final snippet.
+
+## How to use
+
+To step through the execution of the AI agent, follow these steps:
+
+1. Enter your query in the text box provided.
+2. The guidance feature will force the first word of the AI's response to guide it.
+3. Click on "Ask AI" to get a response from the chatbot.
+4. You can edit, delete or merge the last two responses in the response panel.
+5. Once you have the desired output, click on "Detect action" to detect the formatted output in the "Action" field of the AI's last response.
+6. The system will auto-fill the action type and argument fields based on the detected format.
+7. Click on "Execute action" to execute the action with the resulting information pasted as a “System reply” in the response panel.
+8. You can then loop back to step 3 for further interactions with the AI agent.
+
+## Reference
+
+TODO
+"""
+
+
+
 with gr.Blocks() as trace_chatbot:
     with gr.Tab("Help"):
-        gr.Markdown("Under Construction")
+        gr.Markdown(help_text)
     with gr.Tab("Trace Chatbot"):
         uistate_chatbot = gr.State()
         with gr.Row():
