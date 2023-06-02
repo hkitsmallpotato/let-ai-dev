@@ -79,3 +79,7 @@ One possible perspective to look at the set of prompt we designed is that it is 
 The set of prompts I designed right now is still pretty rough. I also found out the order of task seems "wrong" to the AI's eye and so it ignored some of the task, especially those around various diagram to analyse use case.
 
 As I am in a rush, I just skipped some of those tasks, perhaps resulting in incomplete requirement doc to downstream which may affect their quality.
+
+## Agent LLM Manual Test
+
+(TODO) - See `agents/testrun-1`.
