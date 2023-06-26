@@ -1,0 +1,7 @@
+llama-cpp-python
+gradio
+huggingface_hub
+duckduckgo_search
+requests
+html2text
+Jinja2
