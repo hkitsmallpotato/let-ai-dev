@@ -1,4 +1,5 @@
 from duckduckgo_search import DDGS
+from itertools import islice
 
 def do_search(query, limit=10):
     search_result = None

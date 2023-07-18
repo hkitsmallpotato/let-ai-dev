@@ -4,6 +4,17 @@ import gradio as gr
 import random
 import time
 
+from agents.executor_agent import ExecutorAgent
+from agents.conv_agent import ConversationalAgent
+
+from llm.virtual_llm import VirtualLLM
+
+llm_base = VirtualLLM("llm_wizard", "generate")
+llm_code = VirtualLLM("llm_wizardcoder", "generate")
+
+executorAgent = ExecutorAgent()
+convAgent = ConversationalAgent(llm_base, llm_code)
+
 with gr.Blocks() as demo:
     action_history = gr.State(value=[])
     actions = gr.Markdown(value="")
@@ -19,9 +30,6 @@ with gr.Blocks() as demo:
     def on_select(evt: gr.SelectData):
         return evt.value[0]
     
-    followups.select(fn=on_select, inputs=None, outputs=msg)\
-            .success(fn=dothings, inputs=[action_history, chatbot], outputs=[action_history, actions])\
-            .success(fn=respond, inputs=[msg, chatbot], outputs=[msg, chatbot])
     clear = gr.ClearButton([msg, chatbot])
 
     def gen_sample():
@@ -39,9 +47,9 @@ with gr.Blocks() as demo:
         s = "# Actions\n"
         for a in hist:
             if a["type"] == "search":
-                s += "- Searching on the web for **{query}**\n".format(query=a["v"])
+                s += "- Searching on the web for **{query}**\n".format(query=a["arg"]["query"])
             elif a["type"] == "visit":
-                s += "- Visiting website **{title}**\n".format(title=a["v"])
+                s += "- Visiting website **{title}**\n".format(title=a["arg"]["url"])
         return s
     def dothings(hist, chat_history):
         convAgent.setContext(chat_history)
@@ -54,5 +62,9 @@ with gr.Blocks() as demo:
             convAgent.think()
     
     msg.submit(dothings, [action_history, chatbot], [action_history, actions]).success(respond, [msg, chatbot], [msg, chatbot])
+    followups.select(fn=on_select, inputs=None, outputs=msg)\
+        .success(fn=dothings, inputs=[action_history, chatbot], outputs=[action_history, actions])\
+        .success(fn=respond, inputs=[msg, chatbot], outputs=[msg, chatbot])
 
-demo.launch(share=True)
+demo.queue()
+demo.launch(share=False)
