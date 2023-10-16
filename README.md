@@ -4,6 +4,28 @@ This repo hosts some raw and cleaned up data for an experiment to use open sourc
 
 It also hosts Proof-of-Concept AI-enabled app prototype.
 
+## Update (17th Oct 2023)
+
+Half a year is basically a lifetime in the AI scene this year. So much of the manual tests are outdated and for historical reference only.
+
+tl;dr is that open access (weight available) LLM are catching up, although still lagging behind SOTA, it is getting to a place that's usable for less demanding application domain (unfortunately, software engineering is not one of those domains).
+
+Roughly, on the pure-LLM-capability-test side (and focusing on base/foundation models only):
+
+- General purpose: llama v1 33b -> llama v2 13b -> Mistral 7b
+- Coding focused: Codellama -> WizardCoder latest version or equivalent competitor
+- Math: Tora?
+- Science: I remember there is some STEM focused fine-tunes out there, not sure which one though
+
+So what does that leaves us? (My hot take without data to support, just gut feeling from playing with them)
+
+- Complex instruction following and role-playing: okayish, but depends heavily on specific model used, prompt engineering, and your application domain
+- Programming and Software Engineering: Can be an assistant to someone who's already a capable programmer. However context length limitation prevent use in context of existing project (so completely greenfield only and even then don't ask it to just write the entire app), and nope, autonomous agent probably have some runway to go before reaching L3 up. (or even just L2 frankly)
+- STEM original research: Totally speculative at the moment. *Might* be able to provide help on area with less precision requirement. (I haven't done many test on this one though)
+- General autonomous agnet: Long term planning, reliability/robustness etc are still a problem, so it's quite experimental at this moment...
+
+Which is not to look down on these LLM - the above is a list specifically of things "it can't currently do well" and which are important/large area.
+
 ## AI-enabled apps
 
 We prototype them using gradio.
