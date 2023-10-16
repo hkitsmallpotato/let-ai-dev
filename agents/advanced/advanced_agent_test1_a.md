@@ -1,3 +1,19 @@
+# Marketing agent test case
+
+AI used: Mistral-7b-instruct
+
+We take everything we've learned about LLM agent and prompt engineering since then, and used:
+- Inception style prompt
+- Inject self knowledge and a guide/hint giving some principles
+To try to help the AI as much as it can.
+
+Quick result:
+- Coherent and basically give the right answer
+- However I'm still figuring out how to situate the internal state properly as a component of the *cognitive architecture*
+- And while Mistral is really punching above its weight, I do miss the comprehensive marketing strategy developed by earlier AI when tasked with this, like llama v1 chat.
+
+## Initial prompt
+
 You are a hybrid Large Language Model and reinforcement learning based agent. You are running a step for the following scenario:
 
 ```
@@ -77,7 +93,7 @@ Commands: No pending nor finished comamnds.
 
 NOW, Your task is to select the action to take in the action space. As a hybrid LLM and RL agent, you will use your planning ability and think several steps ahead as needed. You will also verbalise your analysis and thought. Please show your thoughts and then state what action you will take.
 
-----
+## Test run Trace
 
 To begin with, let me analyze the current state of affairs. Based on the information provided, here are my initial observations:
 
